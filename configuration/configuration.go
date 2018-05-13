@@ -11,6 +11,7 @@ type Configuration struct {
 
 	Production struct {
 		LogunaTopic string
+		LogFilePath string
 
 		Broker struct {
 			Host string
@@ -20,6 +21,7 @@ type Configuration struct {
 
 	Development struct {
 		LogunaTopic string
+		LogFilePath string
 
 		Broker struct {
 			Host string
@@ -69,6 +71,20 @@ func New() *Configuration {
 		configuration.Development.LogunaTopic = "DevLoguna"
 	} else {
 		configuration.Development.LogunaTopic = developmentLogunaTopic
+	}
+
+	productionLogFilePath := os.Getenv("Production-Log-File-Path")
+	if productionLogFilePath == "" {
+		configuration.Production.LogFilePath = "log"
+	} else {
+		configuration.Production.LogFilePath = productionLogFilePath
+	}
+
+	developmentLogFilePath := os.Getenv("Development-Log-File-Path")
+	if developmentLogFilePath == "" {
+		configuration.Development.LogFilePath = "dev_log"
+	} else {
+		configuration.Development.LogFilePath = developmentLogFilePath
 	}
 
 	return &configuration
