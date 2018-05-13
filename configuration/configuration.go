@@ -59,6 +59,25 @@ func New() *Configuration {
 		configuration.Production.Broker.Port = port
 	}
 
+	developmentBrokerHostFromEnvironment := os.Getenv("Development-Broker-Host")
+	if developmentBrokerHostFromEnvironment == "" {
+		configuration.Development.Broker.Host = "192.168.99.100"
+	} else {
+		configuration.Development.Broker.Host = developmentBrokerHostFromEnvironment
+	}
+
+	developmentBrokerPortFromEnvironment := os.Getenv("Development-Broker-Port")
+	if developmentBrokerPortFromEnvironment == "" {
+		configuration.Development.Broker.Port = 4150
+	} else {
+		port, err := strconv.Atoi(developmentBrokerPortFromEnvironment)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		configuration.Development.Broker.Port = port
+	}
+
 	productionLogunaTopic := os.Getenv("Production-Loguna-Topic")
 	if productionLogunaTopic == "" {
 		configuration.Production.LogunaTopic = "Loguna"

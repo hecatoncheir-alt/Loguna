@@ -12,13 +12,13 @@ type LogData struct {
 	Time                         time.Time
 }
 
-type Logger struct {
+type LogWriter struct {
 	PathOfLogFile string
 	LogFile       *os.File
 }
 
-func New(pathOfLogFile string) *Logger {
-	logger := Logger{PathOfLogFile: pathOfLogFile}
+func New(pathOfLogFile string) *LogWriter {
+	logger := LogWriter{PathOfLogFile: pathOfLogFile}
 	return &logger
 }
 
@@ -30,7 +30,7 @@ var (
 	ErrLogDataCanNotBeSave   = errors.New("log data can't be save")
 )
 
-func (logger *Logger) Write(logData LogData) error {
+func (logger *LogWriter) Write(logData LogData) error {
 	if logData.Time.IsZero() {
 		return ErrLogDataWithoutTime
 	}

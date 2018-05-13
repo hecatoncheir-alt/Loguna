@@ -1,16 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"github.com/hecatoncheir/loguna/broker"
-	"github.com/hecatoncheir/loguna/configuration"
-	"github.com/hecatoncheir/loguna/logger"
+	"encoding/json"
+	"github.com/hecatoncheir/Loguna/broker"
+	"github.com/hecatoncheir/Loguna/configuration"
+	"github.com/hecatoncheir/Loguna/logger"
 	"time"
 )
 
 func main() {
-	logFilePath := "log"
-	logWriter := logger.New(logFilePath)
+	config := configuration.New()
+
+	logWriter := logger.New(config.Production.LogFilePath)
 	defer logWriter.LogFile.Close()
 
 	logStartMessage := logger.LogData{
@@ -22,18 +23,38 @@ func main() {
 		panic(err)
 	}
 
-	config := configuration.New()
+	err = SubscribeLoggerToChannelOfTopic(logWriter,
+		config.Production.LogunaTopic,
+		config.APIVersion)
 
-	bro := broker.New()
-	topicEvents, err := bro.ListenTopic(
-		config.Production.LogunaTopic, config.APIVersion)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func SubscribeLoggerToChannelOfTopic(logWriter *logger.LogWriter,
+	topic, channel string) error {
+
+	bro := broker.New()
+	topicEvents, err := bro.ListenTopic(topic, channel)
+	if err != nil {
+		return err
+	}
 
 	for event := range topicEvents {
-		/// if api version is actual
-		fmt.Println(string(event))
+		data := logger.LogData{}
+		err = json.Unmarshal(event, &data)
+		if err != nil {
+			println(err)
+		}
 
+		if data.ApiVersion == channel {
+			err = logWriter.Write(data)
+			if err != nil {
+				println(err)
+			}
+		}
 	}
+
+	return nil
 }

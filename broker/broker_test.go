@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/hecatoncheir/loguna/configuration"
+	"github.com/hecatoncheir/Loguna/configuration"
 )
 
 func TestBrokerCanSendMessageToNSQ(test *testing.T) {

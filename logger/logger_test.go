@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/hecatoncheir/loguna/configuration"
+	"github.com/hecatoncheir/Loguna/configuration"
 	"os"
 	"testing"
 	"time"
