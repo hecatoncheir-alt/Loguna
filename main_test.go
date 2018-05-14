@@ -1,48 +1,91 @@
 package main
 
 import (
-	"github.com/hecatoncheir/Loguna/broker"
-	"github.com/hecatoncheir/Loguna/configuration"
-	"github.com/hecatoncheir/Loguna/logger"
+	"encoding/json"
+	"io"
 	"os"
 	"testing"
 	"time"
-	"encoding/json"
+
+	"fmt"
+	"github.com/hecatoncheir/Loguna/broker"
+	"github.com/hecatoncheir/Loguna/configuration"
+	"github.com/hecatoncheir/Loguna/logger"
 )
 
 func TestCanWriteLogsDataToFile(test *testing.T) {
-	conf := configuration.New()
+	config := configuration.New()
 
 	bro := broker.New()
-
-	bro.ListenTopic(conf.Development.LogunaTopic, conf.APIVersion)
-
-	_, err := bro.ListenTopic(
-		conf.Development.LogunaTopic, conf.APIVersion)
+	err := bro.Connect(config.Development.Broker.Host, config.Development.Broker.Port)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	logWriter := logger.New(conf.Development.LogFilePath)
+	logWriter := logger.New(config.Development.LogFilePath)
 
-	go SubscribeLoggerToChannelOfTopic(logWriter, conf.Development.LogunaTopic, conf.APIVersion)
+	go func() {
+		logStartMessage := logger.LogData{
+			Time:    time.Now().UTC(),
+			Message: "Prepare log session"}
 
-	logData := logger.LogData{ApiVersion: "1.0.0", Message: "test"}
-	message, err:= json.Marshal(logData)
-	if err != nil {
-		test.Fatal(err)
-	}
+		err := logWriter.Write(logStartMessage)
+		if err != nil {
+			panic(err.Error())
+		}
 
-	err = bro.WriteToTopic(conf.Development.LogunaTopic, string(message))
-	if err != nil {
-		test.Fatal(err)
-	}
+		topicEvents, err := bro.ListenTopic(config.Development.LogunaTopic, config.APIVersion)
+		if err != nil {
+			panic(err.Error())
+		}
 
-	time.Sleep(time.Second * 2)
+		for event := range topicEvents {
+			data := logger.LogData{}
+			err = json.Unmarshal(event, &data)
+			if err != nil {
+				println(err.Error())
+			}
 
-	_, err = os.Stat(conf.Development.LogFilePath)
+			if data.ApiVersion == config.APIVersion {
+				err = logWriter.Write(data)
+				if err != nil {
+					println(err.Error())
+				}
+			}
+
+			break
+		}
+	}()
+
+	logData := logger.LogData{ApiVersion: "1.0.0", Message: "test", Time: time.Now().UTC()}
+
+	go bro.WriteToTopic(config.Development.LogunaTopic, logData)
+
+	time.Sleep(time.Second * 1)
+
+	_, err = os.Stat(config.Development.LogFilePath)
 
 	if os.IsNotExist(err) {
 		test.Fatal()
+	}
+
+	logText := make([]byte, 1024)
+	for {
+		_, err = logWriter.LogFile.Read(logText)
+		if err == io.EOF {
+			break
+		}
+	}
+
+	err = logWriter.LogFile.Close()
+	if err != nil {
+		test.Error(err)
+	}
+
+	fmt.Println(string(logText))
+
+	err = os.Remove(logWriter.PathOfLogFile)
+	if err != nil {
+		test.Error(err.Error())
 	}
 }

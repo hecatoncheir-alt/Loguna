@@ -20,41 +20,31 @@ func main() {
 
 	err := logWriter.Write(logStartMessage)
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
-
-	err = SubscribeLoggerToChannelOfTopic(logWriter,
-		config.Production.LogunaTopic,
-		config.APIVersion)
-
-	if err != nil {
-		panic(err)
-	}
-}
-
-func SubscribeLoggerToChannelOfTopic(logWriter *logger.LogWriter,
-	topic, channel string) error {
 
 	bro := broker.New()
-	topicEvents, err := bro.ListenTopic(topic, channel)
+	err = bro.Connect(config.Production.Broker.Host, config.Production.Broker.Port)
 	if err != nil {
-		return err
+		panic(err.Error())
+	}
+	topicEvents, err := bro.ListenTopic(config.Production.LogunaTopic, config.APIVersion)
+	if err != nil {
+		panic(err.Error())
 	}
 
 	for event := range topicEvents {
 		data := logger.LogData{}
 		err = json.Unmarshal(event, &data)
 		if err != nil {
-			println(err)
+			println(err.Error())
 		}
 
-		if data.ApiVersion == channel {
+		if data.ApiVersion == config.APIVersion {
 			err = logWriter.Write(data)
 			if err != nil {
-				println(err)
+				println(err.Error())
 			}
 		}
 	}
-
-	return nil
 }
