@@ -2,15 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"io"
 	"os"
 	"testing"
 	"time"
 
-	"fmt"
 	"github.com/hecatoncheir/Loguna/broker"
 	"github.com/hecatoncheir/Loguna/configuration"
 	"github.com/hecatoncheir/Loguna/logger"
+	"io/ioutil"
 )
 
 func TestCanWriteLogsDataToFile(test *testing.T) {
@@ -31,12 +30,12 @@ func TestCanWriteLogsDataToFile(test *testing.T) {
 
 		err := logWriter.Write(logStartMessage)
 		if err != nil {
-			panic(err.Error())
+			test.Fatal(err.Error())
 		}
 
 		topicEvents, err := bro.ListenTopic(config.Development.LogunaTopic, config.APIVersion)
 		if err != nil {
-			panic(err.Error())
+			test.Fatal(err.Error())
 		}
 
 		for event := range topicEvents {
@@ -66,25 +65,19 @@ func TestCanWriteLogsDataToFile(test *testing.T) {
 	_, err = os.Stat(config.Development.LogFilePath)
 
 	if os.IsNotExist(err) {
-		test.Fatal()
+		test.Fatal(err)
 	}
 
-	logText := make([]byte, 1024)
-	for {
-		_, err = logWriter.LogFile.Read(logText)
-		if err == io.EOF {
-			break
-		}
-	}
-
-	err = logWriter.LogFile.Close()
+	logFile, err := ioutil.ReadFile(config.Development.LogFilePath)
 	if err != nil {
-		test.Error(err)
+		test.Error(err.Error())
 	}
 
-	fmt.Println(string(logText))
+	if logFile == nil {
+		test.Fail()
+	}
 
-	err = os.Remove(logWriter.PathOfLogFile)
+	err = os.Remove(config.Development.LogFilePath)
 	if err != nil {
 		test.Error(err.Error())
 	}

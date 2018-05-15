@@ -28,11 +28,6 @@ func TestLoggerCanWriteLogData(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	err = logWriter.LogFile.Close()
-	if err != nil {
-		test.Error(err)
-	}
-
 	err = os.Remove(conf.Development.LogFilePath)
 	if err != nil {
 		test.Error(err)

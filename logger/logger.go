@@ -67,7 +67,7 @@ func (logger *LogWriter) Write(logData LogData) error {
 		}
 	}
 
-	err = logger.LogFile.Sync()
+	err = logger.LogFile.Close()
 	if err != nil {
 		return ErrLogDataCanNotBeSave
 	}
