@@ -6,7 +6,7 @@ import (
 
 	"github.com/hecatoncheir/Broker"
 	"github.com/hecatoncheir/Configuration"
-	"github.com/hecatoncheir/Loguna/logToFileWriter"
+	"github.com/hecatoncheir/Loguna/filelog"
 )
 
 func main() {
@@ -18,10 +18,10 @@ func main() {
 		panic(err.Error())
 	}
 
-	logWriter := logToFileWriter.New(config.Production.LogFilePath)
+	logWriter := filelog.New(config.Production.LogFilePath)
 	defer logWriter.LogFile.Close()
 
-	logStartMessage := logToFileWriter.LogData{
+	logStartMessage := filelog.LogData{
 		Time:    time.Now(),
 		Message: "Prepare log session"}
 
@@ -43,7 +43,7 @@ func main() {
 		}
 
 		if eventData.APIVersion == config.APIVersion {
-			logData := logToFileWriter.LogData{}
+			logData := filelog.LogData{}
 			json.Unmarshal([]byte(eventData.Data), &logData)
 
 			err = logWriter.Write(logData)

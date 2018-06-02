@@ -9,7 +9,7 @@ import (
 	"github.com/hecatoncheir/Broker"
 	"github.com/hecatoncheir/Configuration"
 	"github.com/hecatoncheir/Logger"
-	"github.com/hecatoncheir/Loguna/logToFileWriter"
+	"github.com/hecatoncheir/Loguna/filelog"
 	"io/ioutil"
 )
 
@@ -22,10 +22,10 @@ func TestCanWriteLogsDataToFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	logWriter := logToFileWriter.New(config.Development.LogFilePath)
+	logWriter := filelog.New(config.Development.LogFilePath)
 
 	go func() {
-		logStartMessage := logToFileWriter.LogData{
+		logStartMessage := filelog.LogData{
 			Time:    time.Now().UTC(),
 			Message: "Prepare log session"}
 
@@ -40,7 +40,7 @@ func TestCanWriteLogsDataToFile(test *testing.T) {
 		}
 
 		for event := range topicEvents {
-			data := logToFileWriter.LogData{}
+			data := filelog.LogData{}
 			err = json.Unmarshal(event, &data)
 			if err != nil {
 				println(err.Error())

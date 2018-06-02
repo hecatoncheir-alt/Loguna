@@ -1,4 +1,4 @@
-package logToFileWriter
+package filelog
 
 import (
 	"errors"
