@@ -1,10 +1,11 @@
-package logger
+package logToFileWriter
 
 import (
-	"github.com/hecatoncheir/Loguna/configuration"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/hecatoncheir/Loguna/configuration"
 )
 
 func TestLoggerCanCheckTimeOfLogData(test *testing.T) {

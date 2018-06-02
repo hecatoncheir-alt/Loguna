@@ -6,25 +6,26 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hecatoncheir/Loguna/broker"
-	"github.com/hecatoncheir/Loguna/configuration"
-	"github.com/hecatoncheir/Loguna/logger"
+	"github.com/hecatoncheir/Broker"
+	"github.com/hecatoncheir/Configuration"
+	"github.com/hecatoncheir/Logger"
+	"github.com/hecatoncheir/Loguna/logToFileWriter"
 	"io/ioutil"
 )
 
 func TestCanWriteLogsDataToFile(test *testing.T) {
 	config := configuration.New()
 
-	bro := broker.New()
+	bro := broker.New(config.APIVersion, config.ServiceName)
 	err := bro.Connect(config.Development.Broker.Host, config.Development.Broker.Port)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	logWriter := logger.New(config.Development.LogFilePath)
+	logWriter := logToFileWriter.New(config.Development.LogFilePath)
 
 	go func() {
-		logStartMessage := logger.LogData{
+		logStartMessage := logToFileWriter.LogData{
 			Time:    time.Now().UTC(),
 			Message: "Prepare log session"}
 
@@ -39,7 +40,7 @@ func TestCanWriteLogsDataToFile(test *testing.T) {
 		}
 
 		for event := range topicEvents {
-			data := logger.LogData{}
+			data := logToFileWriter.LogData{}
 			err = json.Unmarshal(event, &data)
 			if err != nil {
 				println(err.Error())
@@ -56,9 +57,15 @@ func TestCanWriteLogsDataToFile(test *testing.T) {
 		}
 	}()
 
-	logData := logger.LogData{ApiVersion: "1.0.0", Message: "test", Time: time.Now().UTC()}
+	logData := logger.LogData{Message: "test log data", Time: time.Now().UTC()}
+	encodedLogData, err := json.Marshal(logData)
+	if err != nil {
+		test.Error(err.Error())
+	}
 
-	go bro.WriteToTopic(config.Development.LogunaTopic, logData)
+	brokerEventData := broker.EventData{Message: "test", Data: string(encodedLogData)}
+
+	go bro.WriteToTopic(config.Development.LogunaTopic, brokerEventData)
 
 	time.Sleep(time.Second * 1)
 
