@@ -35,9 +35,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	for event := range topicEvents {
-		eventData := broker.EventData{}
-		err = json.Unmarshal(event, &eventData)
+	for eventData := range topicEvents {
 		if err != nil {
 			println(err.Error())
 		}
