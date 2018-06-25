@@ -13,7 +13,7 @@ func main() {
 	config := configuration.New()
 
 	bro := broker.New(config.APIVersion, config.ServiceName)
-	err := bro.Connect(config.Production.Broker.Host, config.Production.Broker.Port)
+	err := bro.Connect(config.Production.EventBus.Host, config.Production.EventBus.Port)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -30,19 +30,17 @@ func main() {
 		panic(err.Error())
 	}
 
-	topicEvents, err := bro.ListenTopic(config.Production.LogunaTopic, config.APIVersion)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	for eventData := range topicEvents {
+	for eventData := range bro.InputChannel {
 		if err != nil {
 			println(err.Error())
 		}
 
 		if eventData.APIVersion == config.APIVersion {
 			logData := filelog.LogData{}
-			json.Unmarshal([]byte(eventData.Data), &logData)
+			err = json.Unmarshal([]byte(eventData.Data), &logData)
+			if err != nil {
+				println(err.Error())
+			}
 
 			err = logWriter.Write(logData)
 			if err != nil {

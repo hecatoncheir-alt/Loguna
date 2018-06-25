@@ -8,7 +8,7 @@ import (
 )
 
 type LogData struct {
-	ApiVersion, Message, Service string
+	APIVersion, Message, Service string
 	Time                         time.Time
 }
 
